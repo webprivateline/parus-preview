@@ -2,11 +2,17 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="description" content="PARUS VPN — личный кабинет">
 <title>PARUS — прототип miniAPP</title>
+<link rel="icon" type="image/png" href="assets/parus-logo.png">
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css">
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; font-family:-apple-system,'Segoe UI',Roboto,sans-serif; }
+  * { margin:0; padding:0; box-sizing:border-box; font-family:-apple-system,'Segoe UI',Roboto,sans-serif; -webkit-tap-highlight-color:transparent; }
+  html, body { overscroll-behavior:none; }
+  button { user-select:none; -webkit-user-select:none; }
   body { background:#E9EEF4; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:24px 12px; gap:14px; }
   .caption { color:#5F6E7E; font-size:14px; }
   .controls { display:flex; gap:18px; align-items:center; color:#33414F; font-size:14px; flex-wrap:wrap; justify-content:center; }
@@ -24,7 +30,7 @@
   }
   .phone.dark { --bg:#0D1B29; --card:#14283C; --text:#EAF3FB; --muted:#7E97AC; --line:#1F3850; --chip:#1A3049; --ok:#2FBF8F; }
 
-  .screens { height:calc(100% - 72px); overflow-y:auto; scrollbar-width:none; }
+  .screens { height:calc(100% - 72px - env(safe-area-inset-bottom, 0px)); overflow-y:auto; scrollbar-width:none; }
   .screens::-webkit-scrollbar { display:none; }
   .screen { display:none; }
   .screen.active { display:block; animation:fadeSlide .28s ease; }
@@ -77,7 +83,7 @@
   .btn.ghost .ti { color:var(--acc); }
   .row2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
 
-  .nav { position:absolute; bottom:0; left:0; right:0; height:72px; background:var(--card); border-top:0.5px solid var(--line); display:flex; padding:8px 10px 14px; gap:4px; transition:background .3s; z-index:10; }
+  .nav { position:absolute; bottom:0; left:0; right:0; height:calc(72px + env(safe-area-inset-bottom, 0px)); background:var(--card); border-top:0.5px solid var(--line); display:flex; padding:8px 10px calc(14px + env(safe-area-inset-bottom, 0px)); gap:4px; transition:background .3s; z-index:10; }
   .nv { flex:1; border:none; background:none; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; font-size:11px; color:var(--muted); cursor:pointer; border-radius:14px; padding:5px 0 4px; transition:background .2s, color .2s, transform .1s; font-family:inherit; }
   .nv .ti { font-size:22px; line-height:1; }
   .nv:active { transform:scale(.94); }
@@ -398,6 +404,41 @@
   </div>
 
 <script>
+  const tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+  const tgHas = v => { try { return tg && tg.isVersionAtLeast && tg.isVersionAtLeast(v); } catch (e) { return false; } };
+  if (tg) {
+    try {
+      tg.ready(); tg.expand();
+      const applyTheme = () => {
+        document.getElementById('ph').classList.toggle('dark', tg.colorScheme === 'dark');
+        if (tgHas('6.1')) tg.setBackgroundColor(tg.colorScheme === 'dark' ? '#0D1B29' : '#F4F8FC');
+      };
+      if (tgHas('6.1')) tg.setHeaderColor('#1E9BE9');
+      applyTheme();
+      tg.onEvent('themeChanged', applyTheme);
+    } catch (e) {}
+  }
+  function haptic(kind) {
+    try {
+      if (!tgHas('6.1') || !tg.HapticFeedback) return;
+      if (kind === 'ok') tg.HapticFeedback.notificationOccurred('success');
+      else if (kind === 'err') tg.HapticFeedback.notificationOccurred('error');
+      else tg.HapticFeedback.impactOccurred('light');
+    } catch (e) {}
+  }
+  function copyText(t) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(t).catch(() => fallbackCopy(t));
+    } else fallbackCopy(t);
+  }
+  function fallbackCopy(t) {
+    const ta = document.createElement('textarea');
+    ta.value = t; ta.style.position = 'fixed'; ta.style.opacity = '0';
+    document.body.appendChild(ta); ta.select();
+    try { document.execCommand('copy'); } catch (e) {}
+    ta.remove();
+  }
+
   let hasSub = true;
   const scr = { home:'scr-home', plans:'scr-plans', bonus:'scr-bonus', help:'scr-help', admin:'scr-admin' };
 
@@ -412,7 +453,7 @@
     { id:'family', nm:'Семейный',     sub:'600 ГБ · 5 устройств',    pr:{30:500, 90:1350, 180:2500, 360:4500} },
     { id:'team',   nm:'Командный',    sub:'1500 ГБ · 10 устройств',  pr:{30:900, 90:2400, 180:4500, 360:8100} },
   ];
-  let period = 90, selTariff = 'pers';
+  let period = 90, selTariff = 'pers', paying = false;
 
   function renderPlans() {
     const months = period / 30;
@@ -430,14 +471,16 @@
     document.getElementById('payBtn').innerHTML = '<i class="ti ti-qrcode"></i>Оплатить ' + cur.pr[period] + ' ₽ через СБП';
   }
   function selPeriod(d) {
+    if (paying) return;
     period = d;
     document.querySelectorAll('#periodSeg button').forEach(b => b.classList.toggle('on', +b.dataset.d === d));
     renderPlans();
   }
-  function selPlan(id) { selTariff = id; renderPlans(); }
+  function selPlan(id) { if (paying) return; selTariff = id; renderPlans(); }
   renderPlans();
 
   function go(name) {
+    haptic();
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     const id = (name === 'home' && !hasSub) ? 'scr-onb' : scr[name];
     document.getElementById(id).classList.add('active');
@@ -474,7 +517,12 @@
     document.getElementById('gbbar').style.width = 0;
     setTimeout(() => { s.classList.add('out'); animateHome(); }, 1700);
   }
-  setTimeout(() => { document.getElementById('splash').classList.add('out'); animateHome(); }, 1700);
+  const splashSeen = (() => { try { return sessionStorage.getItem('splashSeen'); } catch (e) { return null; } })();
+  setTimeout(() => {
+    document.getElementById('splash').classList.add('out');
+    animateHome();
+    try { sessionStorage.setItem('splashSeen', '1'); } catch (e) {}
+  }, splashSeen ? 500 : 1700);
 
   const APP_NAMES = { incy: 'INCY', happ: 'Happ' };
   const STORES = {
@@ -504,10 +552,12 @@
   function selApp(a) { subApp = a; renderConnect(); }
   function addSub() { toast('Откроется ' + APP_NAMES[subApp] + ' — подписка добавится сама'); }
   function copySub() {
-    try { navigator.clipboard.writeText('https://sub.webprivateline.com/api/sub/demo'); } catch (e) {}
+    copyText('https://sub.webprivateline.com/api/sub/demo');
+    haptic('ok');
     toast('Ссылка-подписка скопирована');
   }
   renderConnect();
+  document.getElementById('promo').addEventListener('keydown', e => { if (e.key === 'Enter') usePromo(); });
 
   function openSheet(qr) {
     document.getElementById('sheetwrap').classList.add('open');
@@ -538,13 +588,15 @@
   }
 
   function pay() {
+    if (paying) return;
+    paying = true;
     const b = document.getElementById('payBtn');
     const cur = TARIFFS.find(t => t.id === selTariff);
     b.innerHTML = 'Открываем СБП…'; b.disabled = true; b.style.opacity = .7;
     setTimeout(() => {
       b.innerHTML = '<i class="ti ti-check"></i>Оплачено'; b.style.opacity = 1; b.style.background = 'var(--ok)';
       confetti(); toast('Подписка «' + cur.nm + '» оплачена');
-      setTimeout(() => { renderPlans(); b.disabled = false; b.style.background = ''; }, 2200);
+      setTimeout(() => { paying = false; renderPlans(); b.disabled = false; b.style.background = ''; }, 2200);
     }, 1300);
   }
 
@@ -554,7 +606,8 @@
   }
 
   function copyRef() {
-    try { navigator.clipboard.writeText('t.me/PARUSvpsbot?start=ref84'); } catch(e) {}
+    copyText('t.me/PARUSvpsbot?start=ref84');
+    haptic('ok');
     toast('Ссылка скопирована');
   }
 
@@ -565,11 +618,13 @@
       err.style.display = 'none'; confetti(); toast('Промокод применён');
       document.getElementById('promo').value = '';
     } else {
+      haptic('err');
       err.style.display = 'block'; f.classList.remove('shake'); f.offsetHeight; f.classList.add('shake');
     }
   }
 
   function confetti() {
+    haptic('ok');
     const ph = document.getElementById('ph'), colors = ['#1E9BE9','#2AA7F0','#FFD166','#EF476F','#06D6A0','#fff'];
     for (let i = 0; i < 70; i++) {
       const d = document.createElement('div');
