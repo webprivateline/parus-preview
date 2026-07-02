@@ -125,6 +125,8 @@
   .field { display:flex; gap:8px; }
   .field input { flex:1; min-width:0; background:var(--chip); border:1px solid transparent; border-radius:12px; padding:11px 12px; font-size:13.5px; color:var(--text); outline:none; }
   .field input:focus { border-color:var(--acc); }
+  .field input[type=number]::-webkit-inner-spin-button, .field input[type=number]::-webkit-outer-spin-button { -webkit-appearance:none; margin:0; }
+  .field input[type=number] { -moz-appearance:textfield; appearance:textfield; }
   .field .go { background:var(--acc); color:#fff; border:none; border-radius:12px; padding:0 14px; font-size:16px; cursor:pointer; display:flex; align-items:center; }
   .err { color:#E24B4A; font-size:12.5px; margin-top:6px; display:none; }
   .shake { animation:shake .35s; }
@@ -241,12 +243,12 @@
           </div>
           <div class="card" style="padding:8px 16px 6px;">
             <div class="srv-head"><span class="dot-ok"></span>Серверы · все онлайн</div>
-            <div class="srow"><span class="fl"><img src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/1f1f8-1f1ea.svg" alt="SE"></span><span class="snm">SWEDEN</span><span class="sping"><i></i>46 ms</span></div>
-            <div class="srow"><span class="fl"><img src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/1f1f5-1f1f1.svg" alt="PL"></span><span class="snm">POLAND</span><span class="sping"><i></i>51 ms</span></div>
-            <div class="srow"><span class="fl"><img src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/1f1f3-1f1f1.svg" alt="NL"></span><span class="snm">NETHERLANDS</span><span class="sping"><i></i>58 ms</span></div>
-            <div class="srow"><span class="fl"><img src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/1f1e9-1f1ea.svg" alt="DE"></span><span class="snm">GERMANY</span><span class="sping"><i></i>54 ms</span></div>
-            <div class="srow"><span class="fl"><img src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/1f1eb-1f1ee.svg" alt="FI"></span><span class="snm">FINLAND</span><span class="sping"><i></i>72 ms</span></div>
-            <div class="srow"><span class="fl"><img src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/1f1ea-1f1fa.svg" alt="EU"></span><span class="snm">EUROPE</span><span class="sping"><i></i>84 ms</span></div>
+            <div class="srow"><span class="fl"><img src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/1f1f8-1f1ea.svg" alt="SE"></span><span class="snm">SWEDEN</span><span class="sping"><i></i><span class="pv" data-b="46">46</span>&nbsp;ms</span></div>
+            <div class="srow"><span class="fl"><img src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/1f1f5-1f1f1.svg" alt="PL"></span><span class="snm">POLAND</span><span class="sping"><i></i><span class="pv" data-b="51">51</span>&nbsp;ms</span></div>
+            <div class="srow"><span class="fl"><img src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/1f1f3-1f1f1.svg" alt="NL"></span><span class="snm">NETHERLANDS</span><span class="sping"><i></i><span class="pv" data-b="58">58</span>&nbsp;ms</span></div>
+            <div class="srow"><span class="fl"><img src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/1f1e9-1f1ea.svg" alt="DE"></span><span class="snm">GERMANY</span><span class="sping"><i></i><span class="pv" data-b="54">54</span>&nbsp;ms</span></div>
+            <div class="srow"><span class="fl"><img src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/1f1eb-1f1ee.svg" alt="FI"></span><span class="snm">FINLAND</span><span class="sping"><i></i><span class="pv" data-b="72">72</span>&nbsp;ms</span></div>
+            <div class="srow"><span class="fl"><img src="https://cdn.jsdelivr.net/gh/jdecked/twemoji@15.1.0/assets/svg/1f1ea-1f1fa.svg" alt="EU"></span><span class="snm" style="font-size:12px;">EUROPE | БС | Только INCY</span><span class="sping"><i></i><span class="pv" data-b="84">84</span>&nbsp;ms</span></div>
           </div>
         </div>
       </section>
@@ -271,17 +273,30 @@
         <div class="hdr"><div class="hdr-row"><span class="h-title">Тарифы</span><span class="badge"><i class="ti ti-wallet"></i> Баланс: 350 ₽</span></div></div>
         <div class="content">
           <div class="seg" id="periodSeg">
-            <button data-d="30" onclick="selPeriod(30)">1 мес</button>
-            <button data-d="90" class="on" onclick="selPeriod(90)">3 мес</button>
+            <button data-d="30" class="on" onclick="selPeriod(30)">1 мес</button>
+            <button data-d="90" onclick="selPeriod(90)">3 мес</button>
             <button data-d="180" onclick="selPeriod(180)">6 мес</button>
             <button data-d="360" onclick="selPeriod(360)">12 мес</button>
           </div>
           <div id="planList"></div>
           <button class="btn" id="payBtn" onclick="pay()"></button>
-          <div class="paynote"><i class="ti ti-shield-check"></i>СБП · Карта · Баланс — через ЮKassa</div>
+          <div class="paynote"><i class="ti ti-shield-check"></i>СБП · Карта — через ЮKassa</div>
           <div class="card switchrow">
             <div><div class="nm" style="font-size:14px;">Автопродление</div><div class="sub">Продлим автоматически в день окончания</div></div>
             <div class="sw on" onclick="this.classList.toggle('on'); toast(this.classList.contains('on')?'Автопродление включено':'Автопродление выключено')"></div>
+          </div>
+          <div class="card">
+            <div class="card-t"><i class="ti ti-wallet"></i>Пополнить баланс</div>
+            <div class="chips">
+              <div class="chipbtn" onclick="setTop(100)"><div class="cv">100 ₽</div></div>
+              <div class="chipbtn" onclick="setTop(300)"><div class="cv">300 ₽</div></div>
+              <div class="chipbtn" onclick="setTop(500)"><div class="cv">500 ₽</div></div>
+            </div>
+            <div class="field" style="margin-top:10px;" id="topField">
+              <input id="topAmt" type="number" min="50" inputmode="numeric" placeholder="Своя сумма — от 50 ₽">
+              <button class="go" onclick="topUp()" aria-label="Пополнить"><i class="ti ti-arrow-right"></i></button>
+            </div>
+            <div class="err" id="topErr">Минимальная сумма пополнения — 50 ₽</div>
           </div>
           <div class="card">
             <div class="card-t"><i class="ti ti-database-plus"></i>Докупить трафик</div>
@@ -321,6 +336,11 @@
             </div>
             <div class="err" id="promoErr">Такого промокода нет или он истёк</div>
           </div>
+          <div class="card">
+            <div class="card-t"><i class="ti ti-gift"></i>Подарить подписку</div>
+            <div class="sub" style="margin:6px 0 12px;">Оплатите тариф другу — пришлём ссылку-приглашение, активация в один тап</div>
+            <button class="btn ghost" onclick="toast('Выбор тарифа для подарка')"><i class="ti ti-gift"></i>Выбрать подарок</button>
+          </div>
         </div>
       </section>
 
@@ -333,7 +353,6 @@
           <details><summary><i class="ti ti-device-laptop"></i>Windows и macOS</summary><p>Нажмите «QR-код» на телефоне и отсканируйте его приложением на компьютере, либо «Скопировать ссылку» и вставьте её в приложение.</p></details>
           <div class="sect">Проблемы</div>
           <details><summary><i class="ti ti-alert-triangle"></i>Не работает подключение</summary><p>1. Обновите подписку в приложении (потяните список вниз).<br>2. Выберите другую страну из списка серверов.<br>3. Если не помогло — напишите нам, ответим быстро.</p></details>
-          <details><summary><i class="ti ti-building-bank"></i>Банки и Госуслуги</summary><p>Российские сайты и приложения работают напрямую даже при включённой защите — отключать ничего не нужно.</p></details>
           <button class="btn" onclick="toast('Откроется чат @PARUSvps_support')"><i class="ti ti-brand-telegram"></i>Написать в поддержку</button>
         </div>
       </section>
@@ -449,7 +468,7 @@
     { id:'family', nm:'Семейный',     sub:'600 ГБ · 5 устройств',    pr:{30:500, 90:1350, 180:2500, 360:4500} },
     { id:'team',   nm:'Командный',    sub:'1500 ГБ · 10 устройств',  pr:{30:900, 90:2400, 180:4500, 360:8100} },
   ];
-  let period = 90, selTariff = 'pers', paying = false;
+  let period = 30, selTariff = 'pers', paying = false;
 
   function renderPlans() {
     const months = period / 30;
@@ -554,6 +573,34 @@
   }
   renderConnect();
   document.getElementById('promo').addEventListener('keydown', e => { if (e.key === 'Enter') usePromo(); });
+  document.getElementById('topAmt').addEventListener('keydown', e => { if (e.key === 'Enter') topUp(); });
+
+  function setTop(v) {
+    document.getElementById('topAmt').value = v;
+    document.getElementById('topErr').style.display = 'none';
+  }
+  function topUp() {
+    const inp = document.getElementById('topAmt');
+    const err = document.getElementById('topErr'), f = document.getElementById('topField');
+    const v = parseInt(inp.value, 10);
+    if (!v || v < 50) {
+      haptic('err');
+      err.style.display = 'block';
+      f.classList.remove('shake'); f.offsetHeight; f.classList.add('shake');
+      return;
+    }
+    err.style.display = 'none';
+    haptic('ok');
+    toast('Пополнение на ' + v + ' ₽ — откроется ЮKassa');
+    inp.value = '';
+  }
+
+  setInterval(() => {
+    document.querySelectorAll('.pv').forEach(p => {
+      const b = +p.dataset.b;
+      p.textContent = Math.max(20, b + Math.round((Math.random() - 0.5) * 9));
+    });
+  }, 3000);
 
   function openSheet(qr) {
     document.getElementById('sheetwrap').classList.add('open');
