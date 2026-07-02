@@ -160,6 +160,16 @@
   .app-row .arr { margin-left:auto; color:var(--muted); font-size:17px; }
   .app-row .note { margin-left:auto; font-size:11.5px; color:var(--acc); font-weight:600; }
   .app-row .arr2 { color:var(--muted); font-size:17px; }
+  .app-row.sel { border:2px solid var(--acc); padding:10.5px; }
+  .acol { flex:1; min-width:0; }
+  .anm { font-size:14.5px; font-weight:600; color:var(--text); display:flex; align-items:center; gap:6px; }
+  .rec { font-size:10.5px; color:var(--ok); background:rgba(29,158,117,.12); padding:2px 7px; border-radius:8px; font-weight:600; }
+  .astore { font-size:12px; color:var(--muted); margin-top:2px; display:flex; align-items:center; gap:5px; }
+  .astore .ti { font-size:14px; }
+  .achk { font-size:20px; color:var(--line); flex:none; }
+  .app-row.sel .achk { color:var(--acc); }
+  .seg-sm button { font-size:12.5px; padding:7px 0; }
+  .stept { font-size:12.5px; font-weight:600; color:var(--muted); margin:10px 2px 8px; }
   #qrbox { display:none; text-align:center; padding:8px 0; }
   #qrbox canvas { border-radius:12px; background:#fff; padding:10px; }
 
@@ -360,14 +370,27 @@
       <div class="sheet">
         <div class="grip"></div>
         <h4>Подключение</h4>
-        <div class="lbl">Выберите приложение — подписка добавится сама</div>
-        <div id="applist">
-          <div class="app-row" onclick="toast('Откроется INCY с вашей подпиской')"><div class="av"><svg viewBox="25 92 205 70" width="32" height="12" fill="#1E9BE9"><path d="M45.3 154.9H30V100.1H45.3V154.9Z"/><path d="M92.7 129.3V100.1H107.7V154.9H95.1L71.2 125.7V154.9H56.2V100.1H68.8L92.7 129.3Z"/><path d="M145.4 156C139.8 156 134.7 154.8 130.1 152.4C125.7 149.9 122.1 146.6 119.5 142.2C117 137.9 115.7 133 115.7 127.5C115.7 122 117 117.1 119.5 112.8C122.1 108.4 125.7 105.1 130.1 102.7C134.7 100.2 139.8 99 145.4 99C150.4 99 154.8 99.9 158.8 101.7C162.8 103.4 166.1 106 168.7 109.3L159 118.3C155.5 114 151.2 111.8 146.2 111.8C143.3 111.8 140.6 112.5 138.3 113.8C136.1 115.1 134.3 117 133 119.4C131.8 121.7 131.1 124.4 131.1 127.5C131.1 130.6 131.8 133.3 133 135.7C134.3 138.1 136.1 139.9 138.3 141.2C140.6 142.5 143.3 143.2 146.2 143.2C151.2 143.2 155.5 141 159 136.7L168.7 145.7C166.1 149 162.8 151.6 158.8 153.3C154.8 155.1 150.4 156 145.4 156Z"/><path d="M210.2 100.1H225L204.3 135.3V154.9H189V135L168.3 100.1H184.5L197.3 121.9L210.2 100.1Z"/></svg></div>INCY<span class="note">рекомендуем</span><span class="arr2"><i class="ti ti-chevron-right"></i></span></div>
-          <div class="app-row" onclick="toast('Откроется Happ с вашей подпиской')"><div class="av"><svg viewBox="0 0 100 100" width="22" height="22"><g fill="#1E9BE9"><path d="M32 10 H47 L39 90 H24 Z"/><path d="M58 10 H73 L65 90 H50 Z"/><path d="M41.5 46 H63 L61.6 60 H40.1 Z"/></g><g fill="var(--card)"><rect x="-15" y="31" width="130" height="5" transform="rotate(-27 50 50)"/><rect x="-15" y="63" width="130" height="5" transform="rotate(-27 50 50)"/></g></svg></div>Happ<span class="arr"><i class="ti ti-chevron-right"></i></span></div>
-          <div class="app-row" onclick="toast('Ссылка-подписка скопирована')"><div class="av"><i class="ti ti-copy"></i></div>Скопировать ссылку<span class="arr"><i class="ti ti-chevron-right"></i></span></div>
+        <div id="connectFlow">
+        <div class="seg seg-sm" id="platSeg">
+          <button data-p="ios" onclick="selPlat('ios',true)">iOS</button>
+          <button data-p="android" onclick="selPlat('android',true)">Android</button>
+          <button data-p="windows" onclick="selPlat('windows',true)">Windows</button>
+          <button data-p="macos" onclick="selPlat('macos',true)">macOS</button>
         </div>
-        <div id="qrbox"><canvas id="qr" width="180" height="180"></canvas><div class="lbl" style="margin-top:8px;">Отсканируйте вторым устройством</div></div>
-        <button class="btn ghost" style="margin-top:6px;" onclick="toggleQR()" id="qrToggle"><i class="ti ti-qrcode"></i>Показать QR-код</button>
+        <div class="lbl" id="platNote" style="text-align:center; margin:6px 0 10px;">Устройство определено автоматически</div>
+        <div class="stept">Шаг 1 · Установите приложение</div>
+        <div id="applist">
+          <div class="app-row sel" id="appIncy" onclick="selApp('incy')"><div class="av"><svg viewBox="25 92 205 70" width="32" height="12" fill="#1E9BE9"><path d="M45.3 154.9H30V100.1H45.3V154.9Z"/><path d="M92.7 129.3V100.1H107.7V154.9H95.1L71.2 125.7V154.9H56.2V100.1H68.8L92.7 129.3Z"/><path d="M145.4 156C139.8 156 134.7 154.8 130.1 152.4C125.7 149.9 122.1 146.6 119.5 142.2C117 137.9 115.7 133 115.7 127.5C115.7 122 117 117.1 119.5 112.8C122.1 108.4 125.7 105.1 130.1 102.7C134.7 100.2 139.8 99 145.4 99C150.4 99 154.8 99.9 158.8 101.7C162.8 103.4 166.1 106 168.7 109.3L159 118.3C155.5 114 151.2 111.8 146.2 111.8C143.3 111.8 140.6 112.5 138.3 113.8C136.1 115.1 134.3 117 133 119.4C131.8 121.7 131.1 124.4 131.1 127.5C131.1 130.6 131.8 133.3 133 135.7C134.3 138.1 136.1 139.9 138.3 141.2C140.6 142.5 143.3 143.2 146.2 143.2C151.2 143.2 155.5 141 159 136.7L168.7 145.7C166.1 149 162.8 151.6 158.8 153.3C154.8 155.1 150.4 156 145.4 156Z"/><path d="M210.2 100.1H225L204.3 135.3V154.9H189V135L168.3 100.1H184.5L197.3 121.9L210.2 100.1Z"/></svg></div><div class="acol"><div class="anm">INCY <span class="rec">рекомендуем</span></div><div class="astore" id="storeIncy"></div></div><i class="ti ti-circle-check achk"></i></div>
+          <div class="app-row" id="appHapp" onclick="selApp('happ')"><div class="av"><svg viewBox="0 0 100 100" width="22" height="22"><g fill="#1E9BE9"><path d="M32 10 H47 L39 90 H24 Z"/><path d="M58 10 H73 L65 90 H50 Z"/><path d="M41.5 46 H63 L61.6 60 H40.1 Z"/></g><g fill="var(--card)"><rect x="-15" y="31" width="130" height="5" transform="rotate(-27 50 50)"/><rect x="-15" y="63" width="130" height="5" transform="rotate(-27 50 50)"/></g></svg></div><div class="acol"><div class="anm">Happ</div><div class="astore" id="storeHapp"></div></div><i class="ti ti-circle-check achk"></i></div>
+        </div>
+        <div class="stept">Шаг 2 · Добавьте подписку</div>
+        <button class="btn" id="addSubBtn" onclick="addSub()"></button>
+        <div class="row2" style="margin-top:8px;">
+          <button class="btn ghost" onclick="copySub()"><i class="ti ti-copy"></i>Скопировать</button>
+          <button class="btn ghost" onclick="showQR()"><i class="ti ti-qrcode"></i>QR-код</button>
+        </div>
+        </div>
+        <div id="qrbox"><canvas id="qr" width="180" height="180"></canvas><div class="lbl" style="margin-top:8px;">Отсканируйте вторым устройством</div><button class="btn ghost" style="margin-top:10px;" onclick="hideQR()"><i class="ti ti-arrow-left"></i>Назад</button></div>
       </div>
     </div>
 
@@ -453,22 +476,53 @@
   }
   setTimeout(() => { document.getElementById('splash').classList.add('out'); animateHome(); }, 1700);
 
+  const APP_NAMES = { incy: 'INCY', happ: 'Happ' };
+  const STORES = {
+    ios:     { incy: ['ti-brand-apple', 'Скачать в App Store'],       happ: ['ti-brand-apple', 'App Store (аккаунт RU)'] },
+    android: { incy: ['ti-brand-google-play', 'Скачать в Google Play'], happ: ['ti-brand-google-play', 'Скачать в Google Play'] },
+    windows: { incy: ['ti-download', 'Установщик для Windows'],        happ: ['ti-download', 'Установщик для Windows'] },
+    macos:   { incy: ['ti-brand-apple', 'Скачать в App Store'],        happ: ['ti-download', 'Установщик для macOS'] },
+  };
+  let plat = /iPhone|iPad|iPod/.test(navigator.userAgent) ? 'ios'
+    : /Android/.test(navigator.userAgent) ? 'android'
+    : /Macintosh/.test(navigator.userAgent) ? 'macos' : 'windows';
+  let subApp = 'incy';
+
+  function renderConnect() {
+    document.querySelectorAll('#platSeg button').forEach(b => b.classList.toggle('on', b.dataset.p === plat));
+    document.getElementById('storeIncy').innerHTML = '<i class="ti ' + STORES[plat].incy[0] + '"></i>' + STORES[plat].incy[1];
+    document.getElementById('storeHapp').innerHTML = '<i class="ti ' + STORES[plat].happ[0] + '"></i>' + STORES[plat].happ[1];
+    document.getElementById('appIncy').classList.toggle('sel', subApp === 'incy');
+    document.getElementById('appHapp').classList.toggle('sel', subApp === 'happ');
+    document.getElementById('addSubBtn').innerHTML = '<i class="ti ti-plug-connected"></i>Добавить подписку в ' + APP_NAMES[subApp];
+  }
+  function selPlat(p, manual) {
+    plat = p;
+    document.getElementById('platNote').textContent = manual ? 'Платформа выбрана вручную' : 'Устройство определено автоматически';
+    renderConnect();
+  }
+  function selApp(a) { subApp = a; renderConnect(); }
+  function addSub() { toast('Откроется ' + APP_NAMES[subApp] + ' — подписка добавится сама'); }
+  function copySub() {
+    try { navigator.clipboard.writeText('https://sub.webprivateline.com/api/sub/demo'); } catch (e) {}
+    toast('Ссылка-подписка скопирована');
+  }
+  renderConnect();
+
   function openSheet(qr) {
     document.getElementById('sheetwrap').classList.add('open');
+    renderConnect();
     if (qr) showQR(); else hideQR();
   }
   function closeSheet() { document.getElementById('sheetwrap').classList.remove('open'); }
-  function toggleQR() { document.getElementById('qrbox').style.display === 'block' ? hideQR() : showQR(); }
   function showQR() {
-    document.getElementById('applist').style.display = 'none';
+    document.getElementById('connectFlow').style.display = 'none';
     document.getElementById('qrbox').style.display = 'block';
-    document.getElementById('qrToggle').innerHTML = '<i class="ti ti-arrow-left"></i>Назад к приложениям';
     drawQR();
   }
   function hideQR() {
-    document.getElementById('applist').style.display = 'block';
+    document.getElementById('connectFlow').style.display = 'block';
     document.getElementById('qrbox').style.display = 'none';
-    document.getElementById('qrToggle').innerHTML = '<i class="ti ti-qrcode"></i>Показать QR-код';
   }
   function drawQR() {
     const c = document.getElementById('qr').getContext('2d'), n = 21, s = 180 / n;
