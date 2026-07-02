@@ -666,6 +666,7 @@
   }
 
   setInterval(() => {
+    if (document.hidden || !document.getElementById('scr-home').classList.contains('active')) return;
     document.querySelectorAll('.pv').forEach(p => {
       const b = +p.dataset.b;
       p.textContent = Math.max(20, b + Math.round((Math.random() - 0.5) * 9));
