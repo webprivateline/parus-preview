@@ -442,10 +442,17 @@
   }
   function haptic(kind) {
     try {
-      if (!tgHas('6.1') || !tg.HapticFeedback) return;
-      if (kind === 'ok') tg.HapticFeedback.notificationOccurred('success');
-      else if (kind === 'err') tg.HapticFeedback.notificationOccurred('error');
-      else tg.HapticFeedback.impactOccurred('light');
+      if (tgHas('6.1') && tg.HapticFeedback) {
+        if (kind === 'ok') tg.HapticFeedback.notificationOccurred('success');
+        else if (kind === 'err') tg.HapticFeedback.notificationOccurred('error');
+        else tg.HapticFeedback.impactOccurred('light');
+        return;
+      }
+      if (navigator.vibrate) {
+        if (kind === 'ok') navigator.vibrate([15, 40, 15]);
+        else if (kind === 'err') navigator.vibrate([40, 60, 40]);
+        else navigator.vibrate(12);
+      }
     } catch (e) {}
   }
   function copyText(t) {
@@ -556,6 +563,7 @@
   setTimeout(() => {
     document.getElementById('splash').classList.add('out');
     renderHome();
+    haptic();
     try { sessionStorage.setItem('splashSeen', '1'); } catch (e) {}
   }, splashSeen ? 500 : 1700);
 
