@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>PARUS — прототип miniAPP</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css">
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:-apple-system,'Segoe UI',Roboto,sans-serif; }
+  body { background:#E9EEF4; min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:24px 12px; gap:14px; }
+  .caption { color:#5F6E7E; font-size:14px; }
+  .controls { display:flex; gap:18px; align-items:center; color:#33414F; font-size:14px; flex-wrap:wrap; justify-content:center; }
+  .controls label { display:flex; gap:6px; align-items:center; cursor:pointer; }
+
+  .phone {
+    --acc:#1E9BE9; --acc-dk:#1470C8; --bg:#F4F8FC; --card:#fff; --text:#0F2438; --muted:#6B8299; --line:#E3EDF5; --chip:#EAF3FB; --ok:#1D9E75;
+    width:390px; height:800px; background:var(--bg); border-radius:44px; overflow:hidden; position:relative;
+    box-shadow:0 24px 60px rgba(15,36,56,.28), 0 0 0 10px #1A2530; transition:background .3s;
+  }
+  @media (max-width: 430px) {
+    body { padding:0; gap:0; background:#F4F8FC; }
+    .caption, .controls { display:none; }
+    .phone { width:100vw; height:100dvh; border-radius:0; box-shadow:none; }
+  }
+  .phone.dark { --bg:#0D1B29; --card:#14283C; --text:#EAF3FB; --muted:#7E97AC; --line:#1F3850; --chip:#1A3049; --ok:#2FBF8F; }
+
+  .screens { height:calc(100% - 72px); overflow-y:auto; scrollbar-width:none; }
+  .screens::-webkit-scrollbar { display:none; }
+  .screen { display:none; }
+  .screen.active { display:block; animation:fadeSlide .28s ease; }
+  @keyframes fadeSlide { from { opacity:0; transform:translateX(14px); } to { opacity:1; transform:none; } }
+
+  .hdr { background:linear-gradient(135deg,#2AA7F0,#1470C8); color:#fff; padding:20px 16px; }
+  .hdr.hero { padding-bottom:48px; }
+  .hdr-row { display:flex; align-items:center; gap:10px; min-height:28px; }
+  .brand { font-weight:700; letter-spacing:3px; font-size:17px; }
+  .h-title { font-weight:600; font-size:17px; }
+  .badge { margin-left:auto; font-size:12px; font-weight:500; background:rgba(255,255,255,.22); padding:5px 12px; border-radius:12px; display:flex; align-items:center; gap:5px; }
+  .badge .ti { font-size:13px; }
+
+  .content { padding:16px; display:grid; gap:12px; }
+  .card { background:var(--card); border:0.5px solid var(--line); border-radius:16px; padding:16px; transition:background .3s; }
+  .status-card { margin:-32px 16px 0; box-shadow:0 6px 18px rgba(15,36,56,.06); }
+  .lbl { font-size:12.5px; color:var(--muted); }
+  .big { font-size:26px; font-weight:700; color:var(--text); margin:2px 0 12px; }
+  .bar { height:6px; background:var(--line); border-radius:3px; overflow:hidden; }
+  .bar i { display:block; height:100%; width:0; background:var(--acc); border-radius:3px; transition:width 1.1s cubic-bezier(.22,1,.36,1); }
+  .meta { display:flex; justify-content:space-between; margin-top:12px; font-size:12.5px; color:var(--muted); }
+  .meta span { display:flex; align-items:center; gap:5px; }
+  .meta .ti { font-size:14px; }
+  .sect { font-size:13px; color:var(--muted); margin:4px 2px -4px; }
+
+  .btn { background:var(--acc); color:#fff; border:none; border-radius:14px; padding:15px; font-weight:600; font-size:15px; width:100%; cursor:pointer; transition:transform .1s, background .2s; display:flex; align-items:center; justify-content:center; gap:8px; font-family:inherit; }
+  .btn .ti { font-size:18px; }
+  .btn:active { transform:scale(.97); }
+  .btn.pulse { animation:pulse 2.4s infinite; }
+  @keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(30,155,233,.45);} 60%{box-shadow:0 0 0 16px rgba(30,155,233,0);} 100%{box-shadow:0 0 0 0 rgba(30,155,233,0);} }
+  .btn.ghost { background:var(--card); color:var(--text); border:0.5px solid var(--line); font-weight:500; }
+  .btn.ghost .ti { color:var(--acc); }
+  .row2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+  .nav { position:absolute; bottom:0; left:0; right:0; height:72px; background:var(--card); border-top:0.5px solid var(--line); display:flex; padding:8px 10px 14px; gap:4px; transition:background .3s; z-index:10; }
+  .nv { flex:1; border:none; background:none; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:3px; font-size:11px; color:var(--muted); cursor:pointer; border-radius:14px; padding:5px 0 4px; transition:background .2s, color .2s, transform .1s; font-family:inherit; }
+  .nv .ti { font-size:22px; line-height:1; }
+  .nv:active { transform:scale(.94); }
+  .nv.on { color:var(--acc); background:color-mix(in srgb, var(--acc) 12%, transparent); font-weight:600; }
+
+  .seg { display:flex; background:var(--chip); border-radius:12px; padding:3px; gap:2px; }
+  .seg button { flex:1; border:none; background:none; padding:8px 0; border-radius:10px; font-size:13px; font-weight:500; color:var(--muted); cursor:pointer; font-family:inherit; transition:all .15s; }
+  .seg button.on { background:var(--card); color:var(--text); font-weight:600; box-shadow:0 1px 4px rgba(15,36,56,.12); }
+
+  .plan { display:flex; justify-content:space-between; align-items:center; cursor:pointer; position:relative; }
+  .plan.sel { border:2px solid var(--acc); padding:14.5px; }
+  .nm { font-size:15px; font-weight:600; color:var(--text); }
+  .sub { font-size:12.5px; color:var(--muted); margin-top:2px; }
+  .pr { font-size:16px; font-weight:700; color:var(--text); text-align:right; }
+  .pr small { display:block; font-size:11.5px; font-weight:400; color:var(--muted); margin-top:1px; }
+  .plan.sel .pr { color:var(--acc); }
+  .tag { position:absolute; top:-10px; left:14px; background:var(--acc); color:#fff; font-size:10.5px; font-weight:600; padding:2px 9px; border-radius:9px; }
+  .paynote { display:flex; align-items:center; justify-content:center; gap:6px; font-size:12.5px; color:var(--muted); }
+  .paynote .ti { font-size:15px; }
+
+  .chips { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+  .chipbtn { flex:1; min-width:96px; background:var(--chip); border:0.5px solid transparent; border-radius:12px; padding:9px 6px; text-align:center; cursor:pointer; transition:border-color .15s; }
+  .chipbtn:active { border-color:var(--acc); }
+  .chipbtn .cv { font-size:13.5px; font-weight:600; color:var(--text); }
+  .chipbtn .cp { font-size:12px; color:var(--acc); font-weight:600; margin-top:1px; }
+
+  .switchrow { display:flex; justify-content:space-between; align-items:center; gap:12px; }
+  .sw { width:46px; height:26px; border-radius:13px; background:var(--line); position:relative; cursor:pointer; transition:background .2s; flex:none; }
+  .sw::after { content:''; position:absolute; top:3px; left:3px; width:20px; height:20px; border-radius:50%; background:#fff; transition:left .2s; box-shadow:0 1px 3px rgba(0,0,0,.25); }
+  .sw.on { background:var(--acc); }
+  .sw.on::after { left:23px; }
+
+  .h-row { display:flex; justify-content:space-between; align-items:center; padding:11px 0; border-bottom:0.5px solid var(--line); font-size:13.5px; color:var(--text); }
+  .h-row:last-child { border-bottom:none; padding-bottom:2px; }
+  .h-row:first-of-type { padding-top:4px; }
+  .h-ok { color:var(--ok); display:flex; align-items:center; gap:4px; font-weight:500; white-space:nowrap; }
+  .h-ok .ti { font-size:15px; }
+
+  .field { display:flex; gap:8px; }
+  .field input { flex:1; min-width:0; background:var(--chip); border:1px solid transparent; border-radius:12px; padding:11px 12px; font-size:13.5px; color:var(--text); outline:none; }
+  .field input:focus { border-color:var(--acc); }
+  .field .go { background:var(--acc); color:#fff; border:none; border-radius:12px; padding:0 14px; font-size:16px; cursor:pointer; display:flex; align-items:center; }
+  .err { color:#E24B4A; font-size:12.5px; margin-top:6px; display:none; }
+  .shake { animation:shake .35s; }
+  @keyframes shake { 20%,60%{transform:translateX(-5px);} 40%,80%{transform:translateX(5px);} }
+  .card-t { display:flex; align-items:center; gap:8px; font-size:15px; font-weight:600; color:var(--text); }
+  .card-t .ti { font-size:19px; color:var(--acc); }
+
+  details { background:var(--card); border:0.5px solid var(--line); border-radius:14px; padding:0 14px; }
+  summary { list-style:none; display:flex; align-items:center; gap:10px; padding:13px 0; font-size:14px; font-weight:500; color:var(--text); cursor:pointer; }
+  summary .ti { font-size:19px; color:var(--acc); }
+  summary::after { content:'›'; color:var(--muted); font-size:18px; margin-left:auto; transform:rotate(90deg); transition:transform .2s; }
+  details[open] summary::after { transform:rotate(-90deg); }
+  details p { font-size:13px; color:var(--muted); padding:0 0 13px 29px; line-height:1.55; }
+
+  .splash { position:absolute; inset:0; background:linear-gradient(160deg,#2AA7F0,#1470C8); z-index:30; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px; transition:opacity .45s; }
+  .splash.out { opacity:0; pointer-events:none; }
+  .splash .word { color:#fff; font-weight:700; letter-spacing:8px; font-size:24px; opacity:0; animation:up .6s .9s forwards; }
+  .splash .slogan { color:rgba(255,255,255,.85); font-size:13px; opacity:0; animation:up .6s 1.1s forwards; margin-top:-10px; }
+  @keyframes up { from{opacity:0; transform:translateY(12px);} to{opacity:1; transform:none;} }
+  .sail path { stroke:#fff; stroke-width:3; fill:rgba(255,255,255,0); stroke-dasharray:600; stroke-dashoffset:600; animation:draw 1s ease forwards, fillin .5s .8s forwards; }
+  @keyframes draw { to { stroke-dashoffset:0; } }
+  @keyframes fillin { to { fill:#fff; } }
+  .wave { position:absolute; bottom:-8px; left:0; width:200%; animation:drift 3s linear infinite; opacity:.35; }
+  @keyframes drift { to { transform:translateX(-50%); } }
+
+  .sheetwrap { position:absolute; inset:0; z-index:20; visibility:hidden; }
+  .sheetwrap.open { visibility:visible; }
+  .dim { position:absolute; inset:0; background:rgba(8,20,32,.5); opacity:0; transition:opacity .25s; }
+  .sheetwrap.open .dim { opacity:1; }
+  .sheet { position:absolute; left:0; right:0; bottom:0; background:var(--card); border-radius:24px 24px 0 0; padding:10px 16px 26px; transform:translateY(100%); transition:transform .3s cubic-bezier(.22,1,.36,1); }
+  .sheetwrap.open .sheet { transform:none; }
+  .grip { width:38px; height:4px; border-radius:2px; background:var(--line); margin:0 auto 14px; }
+  .sheet h4 { font-size:16px; font-weight:600; color:var(--text); margin-bottom:2px; text-align:center; }
+  .sheet .lbl { text-align:center; margin-bottom:14px; }
+  .app-row { display:flex; align-items:center; gap:12px; padding:12px; border:0.5px solid var(--line); border-radius:14px; margin-bottom:8px; cursor:pointer; color:var(--text); font-size:14.5px; font-weight:500; }
+  .app-row:active { background:var(--chip); }
+  .app-row .av { width:38px; height:38px; flex:none; border-radius:11px; background:var(--chip); color:var(--acc); display:flex; align-items:center; justify-content:center; font-weight:700; font-size:15px; }
+  .app-row .av .ti { font-size:19px; }
+  .app-row .arr { margin-left:auto; color:var(--muted); font-size:17px; }
+  .app-row .note { margin-left:auto; font-size:11.5px; color:var(--acc); font-weight:600; }
+  .app-row .arr2 { color:var(--muted); font-size:17px; }
+  #qrbox { display:none; text-align:center; padding:8px 0; }
+  #qrbox canvas { border-radius:12px; background:#fff; padding:10px; }
+
+  .toast { position:absolute; bottom:92px; left:50%; transform:translateX(-50%) translateY(16px); background:#0F2438; color:#fff; font-size:13px; padding:10px 18px; border-radius:12px; opacity:0; transition:all .3s; z-index:25; white-space:nowrap; max-width:350px; overflow:hidden; text-overflow:ellipsis; }
+  .toast.show { opacity:1; transform:translateX(-50%); }
+
+  .conf { position:absolute; width:8px; height:12px; top:-14px; z-index:28; animation:fall linear forwards; }
+  @keyframes fall { to { transform:translateY(830px) rotate(720deg); } }
+
+  .onb { padding:36px 24px; text-align:center; }
+  .onb .hero-ico { width:116px; height:116px; margin:22px auto 20px; border-radius:32px; background:linear-gradient(160deg,#2AA7F0,#1470C8); display:flex; align-items:center; justify-content:center; }
+  .onb h2 { color:var(--text); font-size:22px; margin-bottom:8px; }
+  .onb .sub2 { color:var(--muted); font-size:14px; margin-bottom:20px; }
+  .feat { display:flex; gap:12px; align-items:center; text-align:left; padding:9px 4px; color:var(--text); font-size:14px; }
+  .feat .dot { width:36px; height:36px; flex:none; border-radius:11px; background:var(--chip); color:var(--acc); display:flex; align-items:center; justify-content:center; }
+  .feat .dot .ti { font-size:19px; }
+  .trial-note { font-size:12px; color:var(--muted); margin-top:8px; }
+</style>
+</head>
+<body>
+  <div class="caption">Прототип PARUS miniAPP — данные тестовые, всё кликабельно</div>
+  <div class="controls">
+    <label><input type="radio" name="mode" checked onchange="setMode(true)"> С подпиской</label>
+    <label><input type="radio" name="mode" onchange="setMode(false)"> Новый пользователь</label>
+    <label><input type="checkbox" onchange="document.getElementById('ph').classList.toggle('dark',this.checked)"> Тёмная тема</label>
+    <label style="color:#1E9BE9; cursor:pointer;" onclick="replaySplash()"><i class="ti ti-refresh"></i> Заставка</label>
+  </div>
+
+  <div class="phone" id="ph">
+    <div class="splash" id="splash">
+      <svg class="sail" width="110" height="110" viewBox="0 0 100 100">
+        <path d="M44 12 C43 34 41 58 30 78 L12 84 C24 62 34 38 44 12 Z"/>
+        <path d="M50 10 C68 28 78 52 80 80 L52 82 C53 58 52 34 50 10 Z"/>
+      </svg>
+      <div class="word">PARUS</div>
+      <div class="slogan">Безопасное и быстрое подключение</div>
+      <svg class="wave" height="46" viewBox="0 0 800 46" preserveAspectRatio="none" width="200%">
+        <path d="M0 24 Q50 4 100 24 T200 24 T300 24 T400 24 T500 24 T600 24 T700 24 T800 24 V46 H0 Z" fill="#fff"/>
+      </svg>
+    </div>
+
+    <div class="screens" id="screens">
+      <section class="screen active" id="scr-home">
+        <div class="hdr hero">
+          <div class="hdr-row">
+            <svg width="24" height="24" viewBox="0 0 100 100"><path d="M44 12 C43 34 41 58 30 78 L12 84 C24 62 34 38 44 12 Z" fill="#fff"/><path d="M50 10 C68 28 78 52 80 80 L52 82 C53 58 52 34 50 10 Z" fill="#fff"/></svg>
+            <span class="brand">PARUS</span>
+            <span class="badge"><i class="ti ti-circle-check"></i> Активна</span>
+          </div>
+        </div>
+        <div class="card status-card">
+          <div class="lbl">Персональный · до 28 июля</div>
+          <div class="big"><span id="days">0</span> дней</div>
+          <div class="bar"><i id="daybar"></i></div>
+          <div class="meta">
+            <span><i class="ti ti-download"></i><b id="gb">0</b>&nbsp;ГБ из 300</span>
+            <span><i class="ti ti-devices"></i>Устройства: 1 из 2</span>
+          </div>
+          <div class="bar" style="margin-top:8px;"><i id="gbbar"></i></div>
+        </div>
+        <div class="content">
+          <button class="btn pulse" onclick="openSheet()"><i class="ti ti-plug-connected"></i>Подключиться</button>
+          <div class="row2">
+            <button class="btn ghost" onclick="go('plans')"><i class="ti ti-refresh"></i>Продлить</button>
+            <button class="btn ghost" onclick="openSheet(true)"><i class="ti ti-qrcode"></i>QR-код</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" id="scr-onb">
+        <div class="onb">
+          <div class="hero-ico">
+            <svg width="62" height="62" viewBox="0 0 100 100"><path d="M44 12 C43 34 41 58 30 78 L12 84 C24 62 34 38 44 12 Z" fill="#fff"/><path d="M50 10 C68 28 78 52 80 80 L52 82 C53 58 52 34 50 10 Z" fill="#fff"/></svg>
+          </div>
+          <h2>Добро пожаловать в PARUS</h2>
+          <div class="sub2">Безопасное и быстрое подключение</div>
+          <div class="feat"><div class="dot"><i class="ti ti-bolt"></i></div>Высокая скорость — видео в 4K без задержек</div>
+          <div class="feat"><div class="dot"><i class="ti ti-building-bank"></i></div>Банки и Госуслуги работают без отключения VPN</div>
+          <div class="feat"><div class="dot"><i class="ti ti-plug-connected"></i></div>Подключение в один тап</div>
+          <div style="margin-top:22px; display:grid; gap:12px;">
+            <button class="btn pulse" onclick="activateTrial()">Попробовать бесплатно — 7 дней</button>
+            <button class="btn ghost" onclick="go('plans')">Выбрать тариф</button>
+          </div>
+          <div class="trial-note">15 ГБ · 1 устройство · без карты</div>
+        </div>
+      </section>
+
+      <section class="screen" id="scr-plans">
+        <div class="hdr"><div class="hdr-row"><span class="h-title">Тарифы</span><span class="badge"><i class="ti ti-wallet"></i> Баланс: 350 ₽</span></div></div>
+        <div class="content">
+          <div class="seg" id="periodSeg">
+            <button data-d="30" onclick="selPeriod(30)">1 мес</button>
+            <button data-d="90" class="on" onclick="selPeriod(90)">3 мес</button>
+            <button data-d="180" onclick="selPeriod(180)">6 мес</button>
+            <button data-d="360" onclick="selPeriod(360)">12 мес</button>
+          </div>
+          <div id="planList"></div>
+          <button class="btn" id="payBtn" onclick="pay()"></button>
+          <div class="paynote"><i class="ti ti-shield-check"></i>СБП · ЮKassa · можно оплатить с баланса</div>
+          <div class="card switchrow">
+            <div><div class="nm" style="font-size:14px;">Автопродление</div><div class="sub">Продлим автоматически в день окончания</div></div>
+            <div class="sw on" onclick="this.classList.toggle('on'); toast(this.classList.contains('on')?'Автопродление включено':'Автопродление выключено')"></div>
+          </div>
+          <div class="card">
+            <div class="card-t"><i class="ti ti-database-plus"></i>Докупить трафик</div>
+            <div class="chips">
+              <div class="chipbtn" onclick="toast('Пакет 300 ГБ — оплата через СБП')"><div class="cv">300 ГБ</div><div class="cp">150 ₽</div></div>
+              <div class="chipbtn" onclick="toast('Пакет 600 ГБ — оплата через СБП')"><div class="cv">600 ГБ</div><div class="cp">350 ₽</div></div>
+              <div class="chipbtn" onclick="toast('Пакет 1500 ГБ — оплата через СБП')"><div class="cv">1500 ГБ</div><div class="cp">750 ₽</div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-t"><i class="ti ti-history"></i>История оплат</div>
+            <div class="h-row"><span>2 июня · Персональный, 3 мес</span><span class="h-ok">800 ₽ <i class="ti ti-check"></i></span></div>
+            <div class="h-row"><span>2 марта · Персональный, 1 мес</span><span class="h-ok">300 ₽ <i class="ti ti-check"></i></span></div>
+            <div class="h-row"><span>28 февраля · Пополнение баланса</span><span class="h-ok">+500 ₽ <i class="ti ti-check"></i></span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" id="scr-bonus">
+        <div class="hdr"><div class="hdr-row"><span class="h-title">Бонусы</span></div></div>
+        <div class="content">
+          <div class="card">
+            <div class="card-t"><i class="ti ti-users"></i>Приведи друга</div>
+            <div class="sub" style="margin:6px 0 12px;">Другу — 100 ₽ на баланс, вам — 100 ₽ после его первого пополнения, плюс 25% с его оплат</div>
+            <div class="field">
+              <input value="t.me/PARUSvpsbot?start=ref84" readonly>
+              <button class="go" onclick="copyRef()" title="Скопировать"><i class="ti ti-copy"></i></button>
+            </div>
+            <div class="meta"><span><i class="ti ti-user-plus"></i>Приглашено: 4</span><span><i class="ti ti-coin"></i>Заработано: 400 ₽</span></div>
+            <div class="sub" style="margin-top:8px;">Бонусы можно тратить на подписку или вывести от 500 ₽</div>
+          </div>
+          <div class="card">
+            <div class="card-t" style="margin-bottom:10px;"><i class="ti ti-ticket"></i>Промокод</div>
+            <div class="field" id="promoField">
+              <input id="promo" placeholder="Введите код — попробуйте PARUS7">
+              <button class="go" onclick="usePromo()"><i class="ti ti-arrow-right"></i></button>
+            </div>
+            <div class="err" id="promoErr">Такого промокода нет или он истёк</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="screen" id="scr-help">
+        <div class="hdr"><div class="hdr-row"><span class="h-title">Помощь</span></div></div>
+        <div class="content">
+          <div class="sect">Как подключиться</div>
+          <details><summary><i class="ti ti-brand-apple"></i>iPhone и iPad</summary><p>1. Нажмите «Подключиться» на главной.<br>2. Выберите INCY (рекомендуем) или Happ из российского App Store.<br>3. Подписка добавится автоматически — включите VPN одной кнопкой. Первым в списке — сервер «АВТО | Быстрый».</p></details>
+          <details><summary><i class="ti ti-brand-android"></i>Android</summary><p>1. Нажмите «Подключиться» на главной.<br>2. Выберите INCY или Happ.<br>3. Подтвердите импорт подписки и включите VPN.</p></details>
+          <details><summary><i class="ti ti-device-laptop"></i>Windows и macOS</summary><p>Нажмите «QR-код» на телефоне и отсканируйте его приложением на компьютере, либо «Скопировать ссылку» и вставьте её в приложение.</p></details>
+          <div class="sect">Проблемы</div>
+          <details><summary><i class="ti ti-alert-triangle"></i>Не работает VPN</summary><p>1. Обновите подписку в приложении (потяните список вниз).<br>2. Выберите другую страну из списка серверов.<br>3. Если не помогло — напишите нам, ответим быстро.</p></details>
+          <details><summary><i class="ti ti-building-bank"></i>Банки и Госуслуги</summary><p>Российские сайты и приложения работают напрямую даже при включённом VPN — отключать ничего не нужно.</p></details>
+          <button class="btn" onclick="toast('Откроется чат @PARUSvps_support')"><i class="ti ti-brand-telegram"></i>Написать в поддержку</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="nav" id="nav">
+      <button class="nv on" data-s="home" onclick="go('home')"><i class="ti ti-home"></i>Главная</button>
+      <button class="nv" data-s="plans" onclick="go('plans')"><i class="ti ti-bolt"></i>Тарифы</button>
+      <button class="nv" data-s="bonus" onclick="go('bonus')"><i class="ti ti-gift"></i>Бонусы</button>
+      <button class="nv" data-s="help" onclick="go('help')"><i class="ti ti-lifebuoy"></i>Помощь</button>
+    </div>
+
+    <div class="sheetwrap" id="sheetwrap">
+      <div class="dim" onclick="closeSheet()"></div>
+      <div class="sheet">
+        <div class="grip"></div>
+        <h4>Подключение</h4>
+        <div class="lbl">Выберите приложение — подписка добавится сама</div>
+        <div id="applist">
+          <div class="app-row" onclick="toast('Откроется INCY с вашей подпиской')"><div class="av">I</div>INCY<span class="note">рекомендуем</span><span class="arr2"><i class="ti ti-chevron-right"></i></span></div>
+          <div class="app-row" onclick="toast('Откроется Happ с вашей подпиской')"><div class="av">H</div>Happ<span class="arr"><i class="ti ti-chevron-right"></i></span></div>
+          <div class="app-row" onclick="toast('Ссылка-подписка скопирована')"><div class="av"><i class="ti ti-copy"></i></div>Скопировать ссылку<span class="arr"><i class="ti ti-chevron-right"></i></span></div>
+        </div>
+        <div id="qrbox"><canvas id="qr" width="180" height="180"></canvas><div class="lbl" style="margin-top:8px;">Отсканируйте вторым устройством</div></div>
+        <button class="btn ghost" style="margin-top:6px;" onclick="toggleQR()" id="qrToggle"><i class="ti ti-qrcode"></i>Показать QR-код</button>
+      </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+  </div>
+
+<script>
+  let hasSub = true;
+  const scr = { home:'scr-home', plans:'scr-plans', bonus:'scr-bonus', help:'scr-help' };
+
+  const TARIFFS = [
+    { id:'start',  nm:'Стартовый',    sub:'50 ГБ · 1 устройство',    pr:{30:150, 90:400,  180:750,  360:1350} },
+    { id:'pers',   nm:'Персональный', sub:'300 ГБ · 2 устройства',   pr:{30:300, 90:800,  180:1500, 360:2700}, hot:true },
+    { id:'family', nm:'Семейный',     sub:'600 ГБ · 5 устройств',    pr:{30:500, 90:1350, 180:2500, 360:4500} },
+    { id:'team',   nm:'Командный',    sub:'1500 ГБ · 10 устройств',  pr:{30:900, 90:2400, 180:4500, 360:8100} },
+  ];
+  let period = 90, selTariff = 'pers';
+
+  function renderPlans() {
+    const months = period / 30;
+    document.getElementById('planList').innerHTML = TARIFFS.map(t => {
+      const price = t.pr[period];
+      const full = t.pr[30] * months;
+      const disc = months > 1 ? Math.round((1 - price / full) * 100) : 0;
+      const per = months > 1 ? '<small>≈ ' + Math.round(price / months) + ' ₽/мес</small>' : '';
+      const tag = t.hot ? '<span class="tag">Популярный' + (disc ? ' · −' + disc + '%' : '') + '</span>' : '';
+      return '<div class="card plan' + (t.id === selTariff ? ' sel' : '') + '" style="margin-bottom:10px;" onclick="selPlan(\'' + t.id + '\')">' + tag +
+        '<div><div class="nm">' + t.nm + '</div><div class="sub">' + t.sub + '</div></div>' +
+        '<div class="pr">' + price + ' ₽' + per + '</div></div>';
+    }).join('');
+    const cur = TARIFFS.find(t => t.id === selTariff);
+    document.getElementById('payBtn').innerHTML = '<i class="ti ti-qrcode"></i>Оплатить ' + cur.pr[period] + ' ₽ через СБП';
+  }
+  function selPeriod(d) {
+    period = d;
+    document.querySelectorAll('#periodSeg button').forEach(b => b.classList.toggle('on', +b.dataset.d === d));
+    renderPlans();
+  }
+  function selPlan(id) { selTariff = id; renderPlans(); }
+  renderPlans();
+
+  function go(name) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    const id = (name === 'home' && !hasSub) ? 'scr-onb' : scr[name];
+    document.getElementById(id).classList.add('active');
+    document.querySelectorAll('.nv').forEach(d => d.classList.toggle('on', d.dataset.s === name));
+    document.getElementById('screens').scrollTop = 0;
+  }
+
+  function setMode(sub) { hasSub = sub; go('home'); }
+
+  function countUp(el, target, decimals, dur) {
+    const t0 = performance.now();
+    (function tick(now) {
+      const p = Math.min((now - t0) / dur, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = (target * eased).toFixed(decimals);
+      if (p < 1) requestAnimationFrame(tick);
+    })(t0);
+  }
+
+  function animateHome() {
+    countUp(document.getElementById('days'), 26, 0, 900);
+    countUp(document.getElementById('gb'), 112.4, 1, 900);
+    setTimeout(() => {
+      document.getElementById('daybar').style.width = '70%';
+      document.getElementById('gbbar').style.width = '37.5%';
+    }, 150);
+  }
+
+  function replaySplash() {
+    const s = document.getElementById('splash');
+    s.classList.remove('out');
+    s.querySelectorAll('path, .word, .slogan').forEach(el => { el.style.animation = 'none'; el.offsetHeight; el.style.animation = ''; });
+    document.getElementById('daybar').style.width = 0;
+    document.getElementById('gbbar').style.width = 0;
+    setTimeout(() => { s.classList.add('out'); animateHome(); }, 1700);
+  }
+  setTimeout(() => { document.getElementById('splash').classList.add('out'); animateHome(); }, 1700);
+
+  function openSheet(qr) {
+    document.getElementById('sheetwrap').classList.add('open');
+    if (qr) showQR(); else hideQR();
+  }
+  function closeSheet() { document.getElementById('sheetwrap').classList.remove('open'); }
+  function toggleQR() { document.getElementById('qrbox').style.display === 'block' ? hideQR() : showQR(); }
+  function showQR() {
+    document.getElementById('applist').style.display = 'none';
+    document.getElementById('qrbox').style.display = 'block';
+    document.getElementById('qrToggle').innerHTML = '<i class="ti ti-arrow-left"></i>Назад к приложениям';
+    drawQR();
+  }
+  function hideQR() {
+    document.getElementById('applist').style.display = 'block';
+    document.getElementById('qrbox').style.display = 'none';
+    document.getElementById('qrToggle').innerHTML = '<i class="ti ti-qrcode"></i>Показать QR-код';
+  }
+  function drawQR() {
+    const c = document.getElementById('qr').getContext('2d'), n = 21, s = 180 / n;
+    c.fillStyle = '#fff'; c.fillRect(0, 0, 180, 180); c.fillStyle = '#0F2438';
+    let seed = 42;
+    const rnd = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) if (rnd() > .5) c.fillRect(x*s, y*s, s-1, s-1);
+    [[0,0],[14,0],[0,14]].forEach(([x,y]) => {
+      c.fillStyle = '#0F2438'; c.fillRect(x*s, y*s, 7*s, 7*s);
+      c.fillStyle = '#fff'; c.fillRect((x+1)*s, (y+1)*s, 5*s, 5*s);
+      c.fillStyle = '#0F2438'; c.fillRect((x+2)*s, (y+2)*s, 3*s, 3*s);
+    });
+  }
+
+  function pay() {
+    const b = document.getElementById('payBtn');
+    const cur = TARIFFS.find(t => t.id === selTariff);
+    b.innerHTML = 'Открываем СБП…'; b.disabled = true; b.style.opacity = .7;
+    setTimeout(() => {
+      b.innerHTML = '<i class="ti ti-check"></i>Оплачено'; b.style.opacity = 1; b.style.background = 'var(--ok)';
+      confetti(); toast('Подписка «' + cur.nm + '» оплачена');
+      setTimeout(() => { renderPlans(); b.disabled = false; b.style.background = ''; }, 2200);
+    }, 1300);
+  }
+
+  function activateTrial() {
+    confetti(); toast('Пробный период активирован — 7 дней');
+    setTimeout(() => { hasSub = true; document.querySelector('input[name=mode]').checked = true; go('home'); animateHome(); }, 900);
+  }
+
+  function copyRef() {
+    try { navigator.clipboard.writeText('t.me/PARUSvpsbot?start=ref84'); } catch(e) {}
+    toast('Ссылка скопирована');
+  }
+
+  function usePromo() {
+    const v = document.getElementById('promo').value.trim().toUpperCase();
+    const err = document.getElementById('promoErr'), f = document.getElementById('promoField');
+    if (v === 'PARUS7') {
+      err.style.display = 'none'; confetti(); toast('Промокод применён');
+      document.getElementById('promo').value = '';
+    } else {
+      err.style.display = 'block'; f.classList.remove('shake'); f.offsetHeight; f.classList.add('shake');
+    }
+  }
+
+  function confetti() {
+    const ph = document.getElementById('ph'), colors = ['#1E9BE9','#2AA7F0','#FFD166','#EF476F','#06D6A0','#fff'];
+    for (let i = 0; i < 70; i++) {
+      const d = document.createElement('div');
+      d.className = 'conf';
+      d.style.left = Math.random()*100 + '%';
+      d.style.background = colors[Math.floor(Math.random()*colors.length)];
+      d.style.animationDuration = (1.1 + Math.random()*1.2) + 's';
+      d.style.animationDelay = Math.random()*.3 + 's';
+      d.style.borderRadius = Math.random() > .5 ? '50%' : '2px';
+      ph.appendChild(d);
+      d.addEventListener('animationend', () => d.remove());
+    }
+  }
+
+  let toastTimer;
+  function toast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg; t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => t.classList.remove('show'), 2200);
+  }
+</script>
+</body>
+</html>
