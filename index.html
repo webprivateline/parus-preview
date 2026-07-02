@@ -105,6 +105,13 @@
   .tag { position:absolute; top:-10px; left:14px; background:var(--acc); color:#fff; font-size:10.5px; font-weight:600; padding:2px 9px; border-radius:9px; }
   .paynote { display:flex; align-items:center; justify-content:center; gap:6px; font-size:12.5px; color:var(--muted); }
   .paynote .ti { font-size:15px; }
+  .paysel { display:flex; gap:8px; }
+  .pchip { flex:1; background:var(--card); border:0.5px solid var(--line); border-radius:12px; padding:8px 4px; text-align:center; cursor:pointer; transition:border-color .15s; }
+  .pchip.on { border:2px solid var(--acc); padding:6.5px 2.5px; }
+  .pchip .pn { font-size:13px; font-weight:600; color:var(--text); }
+  .pchip.on .pn { color:var(--acc); }
+  .pchip .ps { font-size:10.5px; color:var(--muted); margin-top:1px; }
+  .pchip.dis .pn { color:var(--muted); }
 
   .chips { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
   .chipbtn { flex:1; min-width:72px; background:var(--chip); border:0.5px solid transparent; border-radius:12px; padding:9px 6px; text-align:center; cursor:pointer; transition:border-color .15s; }
@@ -273,7 +280,7 @@
       </section>
 
       <section class="screen" id="scr-plans">
-        <div class="hdr"><div class="hdr-row"><span class="h-title">Тарифы</span><span class="badge"><i class="ti ti-wallet"></i> Баланс: 350 ₽</span></div></div>
+        <div class="hdr"><div class="hdr-row"><span class="h-title">Тарифы</span><span class="badge"><i class="ti ti-wallet"></i> Баланс: <span id="balBadge">350</span> ₽</span></div></div>
         <div class="content">
           <div class="seg" id="periodSeg">
             <button data-d="30" class="on" onclick="selPeriod(30)">1 мес</button>
@@ -282,8 +289,9 @@
             <button data-d="360" onclick="selPeriod(360)">12 мес</button>
           </div>
           <div id="planList"></div>
+          <div class="paysel" id="paySel"></div>
           <button class="btn" id="payBtn" onclick="pay()"></button>
-          <div class="paynote"><i class="ti ti-shield-check"></i>СБП · Карта — через ЮKassa</div>
+          <div class="paynote"><i class="ti ti-shield-check"></i>СБП · Карта · Баланс — через ЮKassa</div>
           <div class="card switchrow">
             <div><div class="nm" style="font-size:14px;">Автопродление</div><div class="sub">Продлим автоматически в день окончания</div></div>
             <div class="sw on" onclick="this.classList.toggle('on'); toast(this.classList.contains('on')?'Автопродление включено':'Автопродление выключено')"></div>
@@ -304,10 +312,10 @@
           <div class="card">
             <div class="card-t"><i class="ti ti-database-plus"></i>Докупить трафик</div>
             <div class="chips">
-              <div class="chipbtn" onclick="toast('Пакет 50 ГБ — оплата через СБП')"><div class="cv">50 ГБ</div><div class="cp">50 ₽</div></div>
-              <div class="chipbtn" onclick="toast('Пакет 300 ГБ — оплата через СБП')"><div class="cv">300 ГБ</div><div class="cp">150 ₽</div></div>
-              <div class="chipbtn" onclick="toast('Пакет 600 ГБ — оплата через СБП')"><div class="cv">600 ГБ</div><div class="cp">350 ₽</div></div>
-              <div class="chipbtn" onclick="toast('Пакет 1500 ГБ — оплата через СБП')"><div class="cv">1500 ГБ</div><div class="cp">750 ₽</div></div>
+              <div class="chipbtn" onclick="buyPack(50, 50)"><div class="cv">50 ГБ</div><div class="cp">50 ₽</div></div>
+              <div class="chipbtn" onclick="buyPack(300, 150)"><div class="cv">300 ГБ</div><div class="cp">150 ₽</div></div>
+              <div class="chipbtn" onclick="buyPack(600, 350)"><div class="cv">600 ГБ</div><div class="cp">350 ₽</div></div>
+              <div class="chipbtn" onclick="buyPack(1500, 750)"><div class="cv">1500 ГБ</div><div class="cp">750 ₽</div></div>
             </div>
           </div>
           <div class="card">
@@ -483,6 +491,38 @@
     { id:'team',   nm:'Командный',    sub:'1500 ГБ · 10 устройств',  pr:{30:900, 90:2400, 180:4500, 360:8100} },
   ];
   let period = 30, selTariff = 'pers', paying = false;
+  let balance = 350, payMethod = null;
+
+  function curPrice() { return TARIFFS.find(t => t.id === selTariff).pr[period]; }
+  function updBal() { document.getElementById('balBadge').textContent = balance; }
+  function renderPay() {
+    const price = curPrice();
+    if (payMethod === null || (payMethod === 'bal' && balance < price)) {
+      payMethod = balance >= price ? 'bal' : 'sbp';
+    }
+    const balOk = balance >= price;
+    document.getElementById('paySel').innerHTML =
+      '<div class="pchip' + (payMethod === 'bal' ? ' on' : '') + (balOk ? '' : ' dis') + '" onclick="selMethod(\'bal\')"><div class="pn">Баланс</div><div class="ps">' + (balOk ? balance + ' ₽' : 'не хватает ' + (price - balance) + ' ₽') + '</div></div>' +
+      '<div class="pchip' + (payMethod === 'sbp' ? ' on' : '') + '" onclick="selMethod(\'sbp\')"><div class="pn">СБП</div><div class="ps">мгновенно</div></div>' +
+      '<div class="pchip' + (payMethod === 'card' ? ' on' : '') + '" onclick="selMethod(\'card\')"><div class="pn">Карта</div><div class="ps">МИР · Visa · MC</div></div>';
+    const label = payMethod === 'bal' ? 'с баланса' : payMethod === 'sbp' ? 'через СБП' : 'картой';
+    const ico = payMethod === 'bal' ? 'ti-wallet' : payMethod === 'sbp' ? 'ti-qrcode' : 'ti-credit-card';
+    document.getElementById('payBtn').innerHTML = '<i class="ti ' + ico + '"></i>Оплатить ' + price + ' ₽ ' + label;
+  }
+  function selMethod(m) {
+    if (paying) return;
+    if (m === 'bal' && balance < curPrice()) {
+      const need = curPrice() - balance;
+      setTop(need);
+      toast('Не хватает ' + need + ' ₽ — пополните баланс ниже');
+      haptic('err');
+      document.getElementById('topField').scrollIntoView({ behavior:'smooth', block:'center' });
+      return;
+    }
+    payMethod = m;
+    haptic();
+    renderPay();
+  }
 
   function renderPlans() {
     const months = period / 30;
@@ -496,8 +536,7 @@
         '<div><div class="nm">' + t.nm + '</div><div class="sub">' + t.sub + '</div></div>' +
         '<div class="pr">' + price + ' ₽' + per + '</div></div>';
     }).join('');
-    const cur = TARIFFS.find(t => t.id === selTariff);
-    document.getElementById('payBtn').innerHTML = '<i class="ti ti-qrcode"></i>Оплатить ' + cur.pr[period] + ' ₽ через СБП';
+    renderPay();
   }
   function selPeriod(d) {
     if (paying) return;
@@ -619,9 +658,11 @@
       return;
     }
     err.style.display = 'none';
+    balance += v; updBal();
     haptic('ok');
-    toast('Пополнение на ' + v + ' ₽ — откроется ЮKassa');
+    toast('Баланс пополнен на ' + v + ' ₽ — на счёте ' + balance + ' ₽');
     inp.value = '';
+    renderPay();
   }
 
   setInterval(() => {
@@ -664,18 +705,33 @@
     paying = true;
     const b = document.getElementById('payBtn');
     const cur = TARIFFS.find(t => t.id === selTariff);
-    b.innerHTML = 'Открываем СБП…'; b.disabled = true; b.style.opacity = .7;
+    const price = cur.pr[period], method = payMethod;
+    b.innerHTML = method === 'bal' ? 'Списываем с баланса…' : method === 'sbp' ? 'Открываем СБП…' : 'Открываем оплату картой…';
+    b.disabled = true; b.style.opacity = .7;
     setTimeout(() => {
       b.innerHTML = '<i class="ti ti-check"></i>Оплачено'; b.style.opacity = 1; b.style.background = 'var(--ok)';
       confetti();
+      if (method === 'bal') { balance -= price; updBal(); }
       if (subState !== 'paid') {
         subState = 'paid';
         toast('Подписка «' + cur.nm + '» активна — пробный период завершён');
       } else {
-        toast('Подписка «' + cur.nm + '» оплачена');
+        toast(method === 'bal' ? 'Оплачено с баланса — остаток ' + balance + ' ₽' : 'Подписка «' + cur.nm + '» оплачена');
       }
       setTimeout(() => { paying = false; renderPlans(); b.disabled = false; b.style.background = ''; }, 2200);
-    }, 1300);
+    }, method === 'bal' ? 700 : 1300);
+  }
+
+  function buyPack(gb, price) {
+    if (balance >= price) {
+      balance -= price; updBal();
+      haptic('ok'); confetti();
+      toast('Пакет ' + gb + ' ГБ подключён — списано с баланса, остаток ' + balance + ' ₽');
+      renderPay();
+    } else {
+      haptic();
+      toast('Пакет ' + gb + ' ГБ — ' + price + ' ₽, откроется СБП');
+    }
   }
 
   function activateTrial() {
