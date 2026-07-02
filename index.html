@@ -43,6 +43,8 @@
   .h-title { font-weight:600; font-size:17px; }
   .badge { margin-left:auto; font-size:12px; font-weight:500; background:rgba(255,255,255,.22); padding:5px 12px; border-radius:12px; display:flex; align-items:center; gap:5px; }
   .badge .ti { font-size:13px; }
+  .tbtn { width:30px; height:30px; flex:none; border:none; border-radius:10px; background:rgba(255,255,255,.18); color:#fff; display:flex; align-items:center; justify-content:center; font-size:15px; cursor:pointer; transition:transform .1s; }
+  .tbtn:active { transform:scale(.9); }
 
   .content { padding:16px; display:grid; gap:12px; }
   .card { background:var(--card); border:0.5px solid var(--line); border-radius:16px; padding:16px; transition:background .3s; }
@@ -105,7 +107,7 @@
   .paynote .ti { font-size:15px; }
 
   .chips { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
-  .chipbtn { flex:1; min-width:96px; background:var(--chip); border:0.5px solid transparent; border-radius:12px; padding:9px 6px; text-align:center; cursor:pointer; transition:border-color .15s; }
+  .chipbtn { flex:1; min-width:72px; background:var(--chip); border:0.5px solid transparent; border-radius:12px; padding:9px 6px; text-align:center; cursor:pointer; transition:border-color .15s; }
   .chipbtn:active { border-color:var(--acc); }
   .chipbtn .cv { font-size:13.5px; font-weight:600; color:var(--text); }
   .chipbtn .cp { font-size:12px; color:var(--acc); font-weight:600; margin-top:1px; }
@@ -201,7 +203,7 @@
   <div class="controls">
     <label><input type="radio" name="mode" checked onchange="setMode(true)"> С подпиской</label>
     <label><input type="radio" name="mode" onchange="setMode(false)"> Новый пользователь</label>
-    <label><input type="checkbox" onchange="document.getElementById('ph').classList.toggle('dark',this.checked)"> Тёмная тема</label>
+    <label><input type="checkbox" id="themeChk" onchange="setTheme(this.checked)"> Тёмная тема</label>
     <label><input type="checkbox" onchange="toggleAdmin(this.checked)"> Режим владельца</label>
     <label style="color:#1E9BE9; cursor:pointer;" onclick="replaySplash()"><i class="ti ti-refresh"></i> Заставка</label>
   </div>
@@ -222,23 +224,24 @@
           <div class="hdr-row">
             <img src="assets/parus-sail-white.png" alt="" style="height:22px; width:auto; display:block;">
             <span class="brand">PARUS</span>
-            <span class="badge"><i class="ti ti-circle-check"></i> Активна</span>
+            <span class="badge" id="stBadge"><i class="ti ti-circle-check"></i> Активна</span>
+            <button class="tbtn" id="themeBtn" aria-label="Сменить тему" onclick="setTheme(!document.getElementById('ph').classList.contains('dark'))"><i class="ti ti-moon"></i></button>
           </div>
         </div>
         <div class="card status-card">
-          <div class="lbl">Персональный · до 28 июля</div>
+          <div class="lbl" id="stLbl">Персональный · до 28 июля</div>
           <div class="big"><span id="days">0</span> дней</div>
           <div class="bar"><i id="daybar"></i></div>
           <div class="meta">
-            <span><i class="ti ti-download"></i><b id="gb">0</b>&nbsp;ГБ из 300</span>
-            <span><i class="ti ti-devices"></i>Устройства: 1 из 2</span>
+            <span><i class="ti ti-download"></i><b id="gb">0</b>&nbsp;ГБ из <span id="gbMax">300</span></span>
+            <span><i class="ti ti-devices"></i><span id="devTxt">Устройства: 1 из 2</span></span>
           </div>
           <div class="bar" style="margin-top:8px;"><i id="gbbar"></i></div>
         </div>
         <div class="content">
           <button class="btn pulse" onclick="openSheet()"><i class="ti ti-plug-connected"></i>Подключиться</button>
           <div class="row2">
-            <button class="btn ghost" onclick="go('plans')"><i class="ti ti-refresh"></i>Продлить</button>
+            <button class="btn ghost" id="renewBtn" onclick="go('plans')"><i class="ti ti-refresh"></i>Продлить</button>
             <button class="btn ghost" onclick="openSheet(true)"><i class="ti ti-qrcode"></i>QR-код</button>
           </div>
           <div class="card" style="padding:8px 16px 6px;">
@@ -288,9 +291,9 @@
           <div class="card">
             <div class="card-t"><i class="ti ti-wallet"></i>Пополнить баланс</div>
             <div class="chips">
-              <div class="chipbtn" onclick="setTop(100)"><div class="cv">100 ₽</div></div>
+              <div class="chipbtn" onclick="setTop(150)"><div class="cv">150 ₽</div></div>
               <div class="chipbtn" onclick="setTop(300)"><div class="cv">300 ₽</div></div>
-              <div class="chipbtn" onclick="setTop(500)"><div class="cv">500 ₽</div></div>
+              <div class="chipbtn" onclick="setTop(600)"><div class="cv">600 ₽</div></div>
             </div>
             <div class="field" style="margin-top:10px;" id="topField">
               <input id="topAmt" type="number" min="50" inputmode="numeric" placeholder="Своя сумма — от 50 ₽">
@@ -301,6 +304,7 @@
           <div class="card">
             <div class="card-t"><i class="ti ti-database-plus"></i>Докупить трафик</div>
             <div class="chips">
+              <div class="chipbtn" onclick="toast('Пакет 50 ГБ — оплата через СБП')"><div class="cv">50 ГБ</div><div class="cp">50 ₽</div></div>
               <div class="chipbtn" onclick="toast('Пакет 300 ГБ — оплата через СБП')"><div class="cv">300 ГБ</div><div class="cp">150 ₽</div></div>
               <div class="chipbtn" onclick="toast('Пакет 600 ГБ — оплата через СБП')"><div class="cv">600 ГБ</div><div class="cp">350 ₽</div></div>
               <div class="chipbtn" onclick="toast('Пакет 1500 ГБ — оплата через СБП')"><div class="cv">1500 ГБ</div><div class="cp">750 ₽</div></div>
@@ -424,14 +428,17 @@
   if (tg) {
     try {
       tg.ready(); tg.expand();
-      const applyTheme = () => {
-        document.getElementById('ph').classList.toggle('dark', tg.colorScheme === 'dark');
-        if (tgHas('6.1')) tg.setBackgroundColor(tg.colorScheme === 'dark' ? '#0D1B29' : '#F4F8FC');
-      };
       if (tgHas('6.1')) tg.setHeaderColor('#1E9BE9');
-      applyTheme();
-      tg.onEvent('themeChanged', applyTheme);
     } catch (e) {}
+  }
+  function setTheme(dark) {
+    document.getElementById('ph').classList.toggle('dark', dark);
+    const btn = document.getElementById('themeBtn');
+    if (btn) btn.innerHTML = '<i class="ti ' + (dark ? 'ti-sun' : 'ti-moon') + '"></i>';
+    const chk = document.getElementById('themeChk');
+    if (chk) chk.checked = dark;
+    try { localStorage.setItem('parusTheme', dark ? 'dark' : 'light'); } catch (e) {}
+    try { if (tg && tgHas('6.1')) tg.setBackgroundColor(dark ? '#0D1B29' : '#F4F8FC'); } catch (e) {}
   }
   function haptic(kind) {
     try {
@@ -454,7 +461,7 @@
     ta.remove();
   }
 
-  let hasSub = true;
+  let subState = 'paid';
   const scr = { home:'scr-home', plans:'scr-plans', bonus:'scr-bonus', help:'scr-help', admin:'scr-admin' };
 
   function toggleAdmin(on) {
@@ -497,13 +504,14 @@
   function go(name) {
     haptic();
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    const id = (name === 'home' && !hasSub) ? 'scr-onb' : scr[name];
+    const id = (name === 'home' && subState === 'none') ? 'scr-onb' : scr[name];
     document.getElementById(id).classList.add('active');
     document.querySelectorAll('.nv').forEach(d => d.classList.toggle('on', d.dataset.s === name));
     document.getElementById('screens').scrollTop = 0;
+    if (id === 'scr-home') renderHome();
   }
 
-  function setMode(sub) { hasSub = sub; go('home'); }
+  function setMode(sub) { subState = sub ? 'paid' : 'none'; go('home'); }
 
   function countUp(el, target, decimals, dur) {
     const t0 = performance.now();
@@ -515,12 +523,24 @@
     })(t0);
   }
 
-  function animateHome() {
-    countUp(document.getElementById('days'), 26, 0, 900);
-    countUp(document.getElementById('gb'), 112.4, 1, 900);
+  const HOME = {
+    paid:  { badge:'<i class="ti ti-circle-check"></i> Активна', lbl:'Персональный · до 28 июля', days:26, dayPct:70, gb:112.4, gbMax:300, gbPct:37.5, dev:'Устройства: 1 из 2', renew:'<i class="ti ti-refresh"></i>Продлить' },
+    trial: { badge:'<i class="ti ti-hourglass"></i> Пробный период', lbl:'Пробный · до 9 июля', days:7, dayPct:100, gb:0.4, gbMax:15, gbPct:3, dev:'Устройства: 1 из 1', renew:'<i class="ti ti-bolt"></i>Купить подписку' }
+  };
+  function renderHome() {
+    const d = HOME[subState === 'trial' ? 'trial' : 'paid'];
+    document.getElementById('stBadge').innerHTML = d.badge;
+    document.getElementById('stLbl').textContent = d.lbl;
+    document.getElementById('gbMax').textContent = d.gbMax;
+    document.getElementById('devTxt').textContent = d.dev;
+    document.getElementById('renewBtn').innerHTML = d.renew;
+    document.getElementById('daybar').style.width = 0;
+    document.getElementById('gbbar').style.width = 0;
+    countUp(document.getElementById('days'), d.days, 0, 900);
+    countUp(document.getElementById('gb'), d.gb, 1, 900);
     setTimeout(() => {
-      document.getElementById('daybar').style.width = '70%';
-      document.getElementById('gbbar').style.width = '37.5%';
+      document.getElementById('daybar').style.width = d.dayPct + '%';
+      document.getElementById('gbbar').style.width = d.gbPct + '%';
     }, 150);
   }
 
@@ -530,12 +550,12 @@
     s.querySelectorAll('.sailimg, .word, .slogan').forEach(el => { el.style.animation = 'none'; el.offsetHeight; el.style.animation = ''; });
     document.getElementById('daybar').style.width = 0;
     document.getElementById('gbbar').style.width = 0;
-    setTimeout(() => { s.classList.add('out'); animateHome(); }, 1700);
+    setTimeout(() => { s.classList.add('out'); renderHome(); }, 1700);
   }
   const splashSeen = (() => { try { return sessionStorage.getItem('splashSeen'); } catch (e) { return null; } })();
   setTimeout(() => {
     document.getElementById('splash').classList.add('out');
-    animateHome();
+    renderHome();
     try { sessionStorage.setItem('splashSeen', '1'); } catch (e) {}
   }, splashSeen ? 500 : 1700);
 
@@ -572,6 +592,7 @@
     toast('Ссылка-подписка скопирована');
   }
   renderConnect();
+  setTheme((() => { try { return localStorage.getItem('parusTheme') === 'dark'; } catch (e) { return false; } })());
   document.getElementById('promo').addEventListener('keydown', e => { if (e.key === 'Enter') usePromo(); });
   document.getElementById('topAmt').addEventListener('keydown', e => { if (e.key === 'Enter') topUp(); });
 
@@ -638,14 +659,20 @@
     b.innerHTML = 'Открываем СБП…'; b.disabled = true; b.style.opacity = .7;
     setTimeout(() => {
       b.innerHTML = '<i class="ti ti-check"></i>Оплачено'; b.style.opacity = 1; b.style.background = 'var(--ok)';
-      confetti(); toast('Подписка «' + cur.nm + '» оплачена');
+      confetti();
+      if (subState !== 'paid') {
+        subState = 'paid';
+        toast('Подписка «' + cur.nm + '» активна — пробный период завершён');
+      } else {
+        toast('Подписка «' + cur.nm + '» оплачена');
+      }
       setTimeout(() => { paying = false; renderPlans(); b.disabled = false; b.style.background = ''; }, 2200);
     }, 1300);
   }
 
   function activateTrial() {
     confetti(); toast('Пробный период активирован — 7 дней');
-    setTimeout(() => { hasSub = true; document.querySelector('input[name=mode]').checked = true; go('home'); animateHome(); }, 900);
+    setTimeout(() => { subState = 'trial'; go('home'); }, 900);
   }
 
   function copyRef() {
